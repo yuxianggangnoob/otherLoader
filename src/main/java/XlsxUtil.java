@@ -38,31 +38,46 @@ public class XlsxUtil {
         return result;
     }
 
-    public static Map<List<List<Double>>,List<List<Double>>> getGuDingDaoYeData(String xlsxPath) throws Exception {
+    public static Map<List<List<Double>>, List<List<Double>>> getGuDingDaoYeData(String xlsxPath, int startRow, int startColHead, int StartColTail) throws Exception {
         //get sheet
         XSSFSheet sheet = createSheet(xlsxPath);
         //row 1
         XSSFRow rowTitle = sheet.getRow(0);
+        int kindCount = getHowManyKind(rowTitle);
+        //固定导叶数据
+        Map<List<List<Double>>, List<List<Double>>> guDingData = new HashMap<>();
+        int evertCountCol = 7;
+        for (int colN = 0; colN < kindCount; colN++) {
+            List<List<Double>> headData = get2ColData(xlsxPath, startRow, startColHead + (evertCountCol * colN));
+            List<List<Double>> tailData = get2ColData(xlsxPath, startRow, StartColTail + (evertCountCol * colN));
+            guDingData.put(headData, tailData);
+        }
+        return guDingData;
+    }
+
+    private static int getHowManyKind(XSSFRow rowTitle) {
         int kindCount = 0;
         //get kind count
         for (int i = 0; i < rowTitle.getLastCellNum(); i++) {
             Cell cell = rowTitle.getCell(i);
-            if (cell==null) continue;
+            if (cell == null) continue;
             if (cell.getCellTypeEnum() == CellType.STRING) {
                 if ("尾部连接".equals(cell.getStringCellValue())) kindCount++;
             }
         }
-        //固定导叶数据
-        Map<List<List<Double>>,List<List<Double>>> guDingData=new HashMap<>();
-        int guDingStartRow=2;
-        int guDingStartColHead=4;
-        int guDingStartColRow=6;
-        int evertCountCol=7;
+        return kindCount;
+    }
+
+    public static Map<Integer, List<List<Double>>> getPatternArgs(String xlsxPath, int patternArgStartRow, int patternArgStartCol) throws Exception {
+        XSSFSheet sheet = createSheet(xlsxPath);
+        XSSFRow rowTitle = sheet.getRow(0);
+        int kindCount = getHowManyKind(rowTitle);
+        int evertCountCol = 7;
+        Map<Integer, List<List<Double>>> patternArgs = new HashMap<>();
         for (int colN = 0; colN < kindCount; colN++) {
-            List<List<Double>> headData = get2ColData(xlsxPath, guDingStartRow, guDingStartColHead+ (evertCountCol* colN));
-            List<List<Double>> tailData = get2ColData(xlsxPath, guDingStartRow, guDingStartColRow + (evertCountCol * colN));
-            guDingData.put(headData,tailData);
+            List<List<Double>> colData = get2ColData(xlsxPath, patternArgStartRow, patternArgStartCol + (evertCountCol * colN));
+            patternArgs.put(colN, colData);
         }
-        return guDingData;
+        return patternArgs;
     }
 }
